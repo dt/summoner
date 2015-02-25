@@ -5,12 +5,12 @@ $().ready(function(){
 
   function add_remove(email, name) {
     var cur = recipients();
-    console.log(email, name, cur);
     if (cur.indexOf(email) == -1) {
       $('#listing').find('.person').each(function(i) {
         if ($(this).data('email') == email) { $(this).parent().addClass('selected');}
       });
       var li = $("<li>").text(name).data('email', email).click(function() {add_remove(email)});
+      li.append($('<button type=button>').addClass("close").append('<span aria-hidden="true">&times;</span>'));
       $('#recipients').append(li);
     } else {
       $('#listing').find('.person').each(function(i) {

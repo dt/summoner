@@ -36,6 +36,11 @@
   float: left;
 }
 
+#recipients .close {
+  margin-left: 5px;
+  margin-top: -2px;
+}
+
 #send #controls span {
   display: inline-block;
   margin-right: 1em;
@@ -67,6 +72,7 @@
 }
 
 .person-box {
+  cursor: pointer;
   padding: 1em;
   margin: .4em .4em 0 0;
   border: 1px solid #ddd;
