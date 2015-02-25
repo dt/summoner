@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Summoner{% endblock %}
+{% block content %}
+
+<div id="send">
+  <div class="to">
+    <label>To</label>
+    <ul id="recipients"></ul>
+  </div>
+  <div class="clearfix"></div>
+  <div id="controls">
+    <span><label>SMS</label> <input type="checkbox" id="send-sms" checked="checked" /></span>
+    <span><label>Email</label> <input type="checkbox" id="send-email" /></span>
+    <span><label>Slack</label> <input type="checkbox" id="send-slack" /></span>
+
+    <div id="automessages">
+      <button class="automsg" data-msg="You have a visitor at the front desk.">
+        <span class="glyphicon glyphicon-user" aria-hidden="true"></span> Visitor
+      </button>
+      <button class="automsg" data-msg="You have mail at the front desk.">
+        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> Mail at Front Desk
+      </button>
+      <button class="automsg" data-msg="You have a package in the back hallway.">
+        <span class="glyphicon glyphicon-gift" aria-hidden="true"></span>Mail in Back Hallway
+      </button>
+    </div>
+  </div>
+  <div>
+    <textarea rows="3" id="msg"></textarea>
+    <button id="send-submit" class="btn btn-default">Send</button>
+  </div>
+</div>
+
+<div id="directory">
+  <input class="form-control" id="search" autocomplete="off" placeholder="Filter directory..." />
+  <div id="listing">
+  {% for person in directory if person.active %}
+  <div class="person-box">
+    <div class="person" data-email="{{ person.email }}">
+      <img class="lazy img-rounded" data-original="{{ person.photo }}" width="85" height="85" />
+
+      <span class="name">
+        <strong>{{ person.name }}</strong>
+      </span>
+      <span class="email">
+        {{ person.email.split('@')[0] }}@
+      </span>
+      <span class="title">
+        {{ person.title | replace('Software Engineer', 'Engineer') | replace('Business', 'Biz') | replace('Product Manager', 'PM') | replace('Senior', 'Sr') | replace('Manager', 'Mgr') }}
+      </span>
+      {% if not person.executive %}
+      <span class="team">
+        {{ person.team | replace('Human Resources', 'HR') | replace('Operations', 'Ops')}}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+  $().ready(function(){
+
+    function recipients() {
+      return jQuery.map($('#recipients').find('li'), function(i) { return $(i).data('email'); });
+    }
+
+    function add_remove(email, name) {
+      var cur = recipients();
+      console.log(email, name, cur);
+      if (cur.indexOf(email) == -1) {
+        $('#listing').find('.person').each(function(i) {
+          if ($(this).data('email') == email) { $(this).parent().addClass('selected');}
+        });
+        var li = $("<li>").text(name).data('email', email).click(function() {add_remove(email)});
+        $('#recipients').append(li);
+      } else {
+        $('#listing').find('.person').each(function(i) {
+          if ($(this).data('email') == email) { $(this).parent().removeClass('selected');}
+        });
+        $('#recipients').find('li').each(function(i) {
+          if ($(this).data('email') == email) { $(this).remove(); }
+        });
+      }
+
+      if ($('#send').is(':hidden')) {
+        $('#send').slideDown();
+        $("html, body").animate({ scrollTop: 0 });
+      }
+    }
+
+
+    $('.person-box').click(function() {
+      var who = $(this).find('.person');
+      add_remove(who.data('email'), who.find('.name').text());
+    });
+
+    $('#send-submit').click(function() {
+      $.post('/', {
+        'recipients': recipients().join(','),
+        'msg': $('#msg').val(),
+        'sms': $('#send-sms').is(':checked'),
+        'email': $('#send-email').is(':checked'),
+        'slack': $('#send-slack').is(':checked')
+      }, function(whatever) {
+        $li.slideUp('normal', function() { $(this).remove(); });
+      });
+    });
+
+    $('#search').fastLiveFilter('#listing', {
+      callback: function() {$(window).trigger('scroll');}
+    });
+
+    $('.automsg').click(function() { $('#msg').val($(this).data('msg'))});
+
+    $('#search').focus();
+  })
+{% endblock %}

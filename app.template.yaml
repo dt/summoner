@@ -1,0 +1,32 @@
+application: widget-summon
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+env_variables:
+  FROM_ADDRESS: summon@widget-summon.appspotmail.com
+  BAMBOO_DOMAIN: widgetco
+  BAMBOO_KEY: blahblah
+  TWILIO_URL: 'https://api.twilio.com/2010-04-01/Accounts/blahblahblah/SMS/Messages'
+  TWILIO_AUTH: 'oighaeioghoeiwhg9iewhgiewjgioerwjopih='
+  TWILIO_NUMBER: '+5555555555'
+  SLACK_URL: 'https://hooks.slack.com/services/blah/blahblah/blahblahblah'
+
+libraries:
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
+
+builtins:
+- remote_api: on
+
+handlers:
+- url: /static
+  static_dir: static
+
+- url: /.*
+  script: summoner.pages.application
+  login: required
+  secure: always
