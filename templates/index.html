@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Summoner{% endblock %}
 {% block content %}
-
 <div id="send">
+  <div class="alert" id="alert" style="display: none"></div>
   <div class="to">
     <label>To</label>
     <ul id="recipients"></ul>
@@ -27,7 +27,7 @@
   </div>
   <div>
     <textarea rows="3" id="msg"></textarea>
-    <button id="send-submit" class="btn btn-default">Send</button>
+    <button id="send-submit" data-loading-text="Sending..." class="btn btn-primary">Send</button>
   </div>
 </div>
 
@@ -59,62 +59,6 @@
   </div>
 </div>
 {% endblock %}
-
 {% block footer %}
-  $().ready(function(){
-
-    function recipients() {
-      return jQuery.map($('#recipients').find('li'), function(i) { return $(i).data('email'); });
-    }
-
-    function add_remove(email, name) {
-      var cur = recipients();
-      console.log(email, name, cur);
-      if (cur.indexOf(email) == -1) {
-        $('#listing').find('.person').each(function(i) {
-          if ($(this).data('email') == email) { $(this).parent().addClass('selected');}
-        });
-        var li = $("<li>").text(name).data('email', email).click(function() {add_remove(email)});
-        $('#recipients').append(li);
-      } else {
-        $('#listing').find('.person').each(function(i) {
-          if ($(this).data('email') == email) { $(this).parent().removeClass('selected');}
-        });
-        $('#recipients').find('li').each(function(i) {
-          if ($(this).data('email') == email) { $(this).remove(); }
-        });
-      }
-
-      if ($('#send').is(':hidden')) {
-        $('#send').slideDown();
-        $("html, body").animate({ scrollTop: 0 });
-      }
-    }
-
-
-    $('.person-box').click(function() {
-      var who = $(this).find('.person');
-      add_remove(who.data('email'), who.find('.name').text());
-    });
-
-    $('#send-submit').click(function() {
-      $.post('/', {
-        'recipients': recipients().join(','),
-        'msg': $('#msg').val(),
-        'sms': $('#send-sms').is(':checked'),
-        'email': $('#send-email').is(':checked'),
-        'slack': $('#send-slack').is(':checked')
-      }, function(whatever) {
-        $li.slideUp('normal', function() { $(this).remove(); });
-      });
-    });
-
-    $('#search').fastLiveFilter('#listing', {
-      callback: function() {$(window).trigger('scroll');}
-    });
-
-    $('.automsg').click(function() { $('#msg').val($(this).data('msg'))});
-
-    $('#search').focus();
-  })
+  <script src="/static/summoner.js" type="text/javascript"></script>
 {% endblock %}

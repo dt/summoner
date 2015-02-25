@@ -31,7 +31,13 @@ class Index(webapp2.RequestHandler):
     recipients = [directory[i] for i in self.request.get('recipients').split(',')]
     msg = self.request.get('msg')
 
+    if not msg:
+      self.response.set_status(400)
+      self.response.write('Must provide a message')
+      return
+
     body = user.name + ' via summon: ' + msg
+    sent = False
 
     if self.request.get('sms', 'false').lower() != 'false':
       phones = dict((who.name, who.phone) for who in recipients)
@@ -50,6 +56,7 @@ class Index(webapp2.RequestHandler):
         resp = urlfetch.fetch(url, headers=headers, method=urlfetch.POST, payload=params)
         if resp.status_code > 400:
           raise Exception('SMS failed to send.  Maybe too long?  Error: ' + resp.content)
+      sent = True
 
     if self.request.get('email', 'false').lower() != 'false':
       subject = msg[:50]
@@ -58,6 +65,7 @@ class Index(webapp2.RequestHandler):
       from_addr = os.environ.get('FROM_ADDRESS')
       to = [recipient.email for recipient in recipients]
       mail.send_mail(from_addr, to, subject, body)
+      sent = True
 
     if self.request.get('slack', 'false').lower() != 'false':
       try:
@@ -67,6 +75,13 @@ class Index(webapp2.RequestHandler):
           urlfetch.fetch(os.environ.get('SLACK_URL'), method=urlfetch.POST, payload=params)
       except:
         pass
+      sent = True
+
+    if not sent:
+      self.response.set_status(400)
+      self.response.write('Must choose at least one contact method.')
+      return
+
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
