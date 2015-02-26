@@ -22,12 +22,11 @@ The key used needs to have access to:
 - id
 - displayName
 - workEmail
-- customFollowing
 - department
 - status
 - jobTitle
-- homePhone
 - mobilePhone
-- workPhone
+- homePhone (optional, used as fallback)
+- workPhone (optional, used as fallback)
 
 
