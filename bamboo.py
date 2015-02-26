@@ -5,13 +5,12 @@ import base64
 import json
 from hashlib import md5
 from collections import namedtuple
-from google.appengine.api import files
 from google.appengine.api import memcache
 
 class BambooException(Exception):
   pass
 
-Person = namedtuple('Person', ['id', 'name', 'active', 'username', 'email', 'team', 'title', 'follows', 'photo', 'executive', 'phone'])
+Person = namedtuple('Person', ['id', 'name', 'active', 'username', 'email', 'team', 'title', 'photo', 'executive', 'phone'])
 
 class Bamboo(object):
   """super thin wrapper around urllib2 to make get and post requests to bamboo"""
@@ -52,28 +51,27 @@ class Bamboo(object):
       email=directory_entry['workEmail'],
       team=directory_entry['department'],
       title=directory_entry['jobTitle'],
-      follows=filter(lambda x: x, (directory_entry['customFollowing'] or '').split(',')),
       photo=self._photo(directory_entry['workEmail']),
       executive=is_exec(directory_entry['jobTitle']),
       phone=directory_entry.get('mobilePhone') or directory_entry.get('homePhone') or directory_entry.get('workPhone'),
     )
 
-  def fetch_directory(self):
-    req_xml = '<report><title>Follower Directory</title><fields>'
-    for i in ['id', 'displayName', 'workEmail', 'customFollowing', 'department', 'status', 'jobTitle', 'homePhone', 'mobilePhone', 'workPhone']:
+  def fetch_directory_json(self):
+    req_xml = '<report><title>Directory</title><fields>'
+    for i in ['id', 'displayName', 'workEmail', 'department', 'status', 'jobTitle', 'homePhone', 'mobilePhone', 'workPhone']:
       req_xml += '<field id="{0}" />'.format(i)
     req_xml += '</fields></report>'
-    resp = json.load(self.call('reports/custom?format=JSON', req_xml))['employees']
-    return resp
+    return self.call('reports/custom?format=JSON', req_xml).read()
 
   def directory(self):
-    """Use a custom report to get all employees and their following settings"""
+    """Use a custom report to get all employees"""
 
-    cache_key = 'direcotry'
+    cache_key = 'direcotry-2'
     raw = memcache.get(cache_key)
     if raw is None:
-      raw = self.fetch_directory()
+      raw = self.fetch_directory_json()
       if not memcache.add(cache_key, raw, 60 * 5):
         print 'Memcache set failed.'
 
-    return dict((i['workEmail'], self._person(i)) for i in raw if i['workEmail'])
+    parsed = json.loads(raw)['employees']
+    return dict((i['workEmail'], self._person(i)) for i in parsed if i['workEmail'])
